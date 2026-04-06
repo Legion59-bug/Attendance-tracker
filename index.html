@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Calculator | BunkSafe Dashboard</title>
+    <meta name="description" content="Calculate and track your university attendance safely with BunkSafe.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <main class="app-container">
+        <header>
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div style="flex:1">
+                <h1>Bunk<span>Safe</span></h1>
+                <p class="subtitle">Your persistent attendance tracking dashboard.</p>
+            </div>
+            <div id="user-button"></div>
+        </header>
+
+        <div id="auth-container" style="display: none; justify-content: center; margin-top: 2rem;"></div>
+
+        <div id="app-content" style="display: none;">
+            
+            <!-- ====== HOME TAB ====== -->
+            <section id="tab-home" class="view-section active">
+                <div class="welcome-header" style="margin-bottom: 2rem;">
+                    <h2 id="home-greeting" style="font-size: 1.8rem; margin-bottom: 0.5rem; animation: fadeIn 0.5s ease-out;">Welcome back! 👋</h2>
+                    <p style="color: var(--text-secondary); animation: fadeIn 0.8s ease-out;">Here is your performance snapshot.</p>
+                </div>
+
+                <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 2rem; animation: slideUp 0.6s ease-out;">
+                    <div class="glass-panel" style="padding: 1.25rem; text-align: center; border-radius: 16px;">
+                        <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Subjects</h4>
+                        <div id="stat-total-subs" style="font-size: 1.75rem; font-weight: bold; color: white;">0</div>
+                    </div>
+                    <div class="glass-panel" style="padding: 1.25rem; text-align: center; border-radius: 16px;">
+                        <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Classes Today</h4>
+                        <div id="stat-today-classes" style="font-size: 1.75rem; font-weight: bold; color: white;">0</div>
+                    </div>
+                    <div class="glass-panel" style="padding: 1.25rem; text-align: center; border-radius: 16px; border-bottom: 3px solid var(--danger);">
+                        <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Alerts</h4>
+                        <div id="stat-danger-subs" style="font-size: 1.75rem; font-weight: bold; color: var(--danger);">0</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: 1rem;">Today's Routine</h3>
+                <div id="today-routine-list" class="glass-panel" style="padding: 1.5rem;">
+                    <p style="text-align: center; color: var(--text-secondary);">No classes scheduled for today.</p>
+                </div>
+            </section>
+
+            <!-- ====== TRACKER TAB ====== -->
+            <section id="tab-tracker" class="view-section" style="display: none;">
+                <!-- Global Settings Bar -->
+                <div class="settings-bar glass-panel" style="margin-bottom: 2rem; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <label for="global-target" style="margin-bottom: 0; font-size: 1rem; color: white;">Target Attendance (%)</label>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem;">Calculate bunks based on this goal.</p>
+                    </div>
+                    <input type="number" id="global-target" value="75" min="1" max="100" style="width: 80px; text-align: center; padding: 0.5rem; font-size: 1.1rem; font-weight: bold;">
+                </div>
+
+                <div class="add-subject-card glass-panel">
+                    <form id="add-subject-form">
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="subject-name">Subject Name</label>
+                                <input type="text" id="subject-name" placeholder="e.g. Data Structures" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="initial-attended">Attended</label>
+                                <input type="number" id="initial-attended" placeholder="0" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label for="initial-missed">Missed</label>
+                                <input type="number" id="initial-missed" placeholder="0" min="0">
+                            </div>
+                            <div class="input-group button-group">
+                                <label class="invisible">Add</label>
+                                <button type="submit" class="primary-btn">Add Subject</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="subjects-grid" class="subjects-grid">
+                    <!-- Subject cards will be injected here via JavaScript -->
+                </div>
+            </section>
+
+            <!-- ====== ROUTINE TAB ====== -->
+            <section id="tab-routine" class="view-section" style="display: none;">
+                <div class="add-subject-card glass-panel">
+                    <form id="add-routine-form">
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="routine-day">Day of Week</label>
+                                <select id="routine-day" required style="padding: 0.875rem 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-family: var(--font-family);">
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="routine-class">Class Name</label>
+                                <input type="text" id="routine-class" placeholder="e.g. OS Lecture" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="routine-start-time">Start Time</label>
+                                <input type="text" id="routine-start-time" placeholder="10:30 AM" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="routine-end-time">End Time</label>
+                                <input type="text" id="routine-end-time" placeholder="11:30 AM" required>
+                            </div>
+                            <div class="input-group button-group">
+                                <label class="invisible">Add</label>
+                                <button type="submit" class="primary-btn">Add Class</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div id="routine-list" class="glass-panel" style="padding: 1.5rem;">
+                    <!-- Routine list injected here -->
+                </div>
+            </section>
+
+            <!-- ====== ACCOUNT TAB ====== -->
+            <section id="tab-account" class="view-section" style="display: none; align-items: center; flex-direction: column;">
+                <div id="account-portal" style="width: 100%; display: flex; justify-content: center; margin-bottom: 2rem;"></div>
+                
+                <div class="glass-panel" style="padding: 1.5rem; width: 100%; max-width: 600px;">
+                    <h3 style="margin-bottom: 1rem;">Privacy & Policy</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">
+                        BunkSafe respects your privacy. All your attendance entries and daily routines are securely synced directly to your account using industry-standard encryption provided by Clerk and Supabase.
+                    </p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+                        We do not share your timeline or tracking data with any third parties or your university. You maintain full ownership of your data and can delete your account via the management portal above at any time.
+                    </p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-tab="tab-home">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" data-tab="tab-tracker">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Tracker</span>
+        </button>
+        <button class="nav-item" data-tab="tab-routine">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>Routine</span>
+        </button>
+        <button class="nav-item" data-tab="tab-account">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Account</span>
+        </button>
+    </nav>
+
+    <!-- Template for a subject card (hidden, used by JS) -->
+    <template id="subject-card-template">
+        <div class="subject-card glass-panel">
+            <div class="card-header">
+                <h3 class="subject-title">Subject Name</h3>
+                <button class="delete-btn" title="Delete Subject">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="card-body">
+                <div class="chart-container">
+                    <svg viewBox="0 0 36 36" class="circular-chart">
+                        <path class="circle-bg"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="circle" stroke-dasharray="0, 100"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <text x="18" y="20.35" class="percentage-text">0%</text>
+                    </svg>
+                </div>
+                
+                <div class="verdict-container">
+                    <h4 class="verdict-title">Status</h4>
+                    <p class="verdict-message">Message goes here.</p>
+                    <p class="stats-text">Attended: <span class="att-count">0</span> | Missed: <span class="miss-count">0</span></p>
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <button class="action-btn attend-btn">✔️ Attended</button>
+                <button class="action-btn bunk-btn">❌ Bunked</button>
+            </div>
+        </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script 
+      crossorigin="anonymous" 
+      data-clerk-publishable-key="pk_test_d2VsY29tZS1taWRnZS0xMS5jbGVyay5hY2NvdW50cy5kZXYk" 
+      src="https://welcome-midge-11.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" 
+      type="text/javascript"
+    ></script>
+    <script src="script.js"></script>
+</body>
+</html>
